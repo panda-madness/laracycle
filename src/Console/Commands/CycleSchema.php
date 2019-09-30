@@ -19,14 +19,14 @@ class CycleSchema extends Command
      *
      * @var string
      */
-    protected $signature = 'cycle:schema';
+    protected $signature = 'cycle:schema {--m|migrations : Create a migration file} {--s|sync : Sync tables to the generated schema}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Generate a cycle schema';
+    protected $description = 'Generate and cache a cycle schema';
     /**
      * @var ClassLocator
      */
@@ -80,15 +80,16 @@ class CycleSchema extends Command
      */
     public function handle()
     {
-        AnnotationRegistry::registerLoader('class_exists');
-
-        $cache = $this->cacheFactory->store('file');
+        $migrations = $this->input->getOption('migrations');
+        $sync = $this->input->getOption('sync');
 
         if (!$this->migrator->isConfigured()) {
             $this->migrator->configure();
         }
 
-        $schema = (new Schema\Compiler())->compile(new Schema\Registry($this->dbal), [
+        AnnotationRegistry::registerLoader('class_exists');
+
+        $generators = [
             new Annotated\Embeddings($this->classLocator),            // register embeddable entities
             new Annotated\Entities($this->classLocator),              // register annotated entities
             new Schema\Generator\ResetTables(),       // re-declared table schemas (remove columns)
@@ -96,10 +97,23 @@ class CycleSchema extends Command
             new Schema\Generator\ValidateEntities(),  // make sure all entity schemas are correct
             new Schema\Generator\RenderTables(),      // declare table schemas
             new Schema\Generator\RenderRelations(),   // declare relation keys and indexes
-            new \Cycle\Migrations\GenerateMigrations($this->migrator->getRepository(), $this->migrationConfig),
             new Schema\Generator\GenerateTypecast(),  // typecast non string columns
-        ]);
+        ];
+
+        if ($migrations) {
+            $generators[] = new \Cycle\Migrations\GenerateMigrations($this->migrator->getRepository(), $this->migrationConfig);
+        }
+
+        if ($sync) {
+            $generators[] = new Schema\Generator\SyncTables();
+        }
+
+        $schema = (new Schema\Compiler())->compile(new Schema\Registry($this->dbal), $generators);
+
+        $cache = $this->cacheFactory->store('file');
 
         $cache->forever('cycle.orm.schema', $schema);
+
+        return 0;
     }
 }

@@ -5,6 +5,8 @@ namespace Laracycle;
 
 
 use Illuminate\Support\ServiceProvider;
+use Laracycle\Console\Commands\CycleMigrate;
+use Laracycle\Console\Commands\CycleSchema;
 use Laracycle\Providers\MigrationsServiceProvider;
 use Laracycle\Providers\OrmServiceProvider;
 
@@ -23,5 +25,12 @@ class LaracycleServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/../config/cycle.php' => config_path('cycle.php')
         ]);
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                CycleSchema::class,
+                CycleMigrate::class,
+            ]);
+        }
     }
 }
