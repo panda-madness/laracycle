@@ -1,27 +1,23 @@
 <?php
 
+namespace Laracycle\Providers;
 
-namespace PandaMadness\LaravelCycle;
 
-
+use Cycle\ORM\Factory;
+use Cycle\ORM\ORM;
+use Cycle\ORM\Schema;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 use Spiral\Database\Config\DatabaseConfig;
 use Spiral\Database\DatabaseManager;
-use Spiral\Migrations\Config\MigrationConfig;
-use Spiral\Migrations\FileRepository;
-use Spiral\Migrations\Migrator;
 use Spiral\Tokenizer\ClassLocator;
-use Cycle\ORM\Factory;
-use Cycle\ORM\ORM;
-use Cycle\ORM\Schema;
 use Symfony\Component\Finder\Finder;
 
-class CycleOrmServiceProvider extends ServiceProvider
+class OrmServiceProvider extends ServiceProvider
 {
     public function register()
     {
-        $this->app->singleton(DatabaseManager::class, function(Application $app) {
+        $this->app->singleton(DatabaseManager::class, function() {
             $config = new DatabaseConfig(config('cycle.database'));
             return new DatabaseManager($config);
         });
@@ -40,27 +36,9 @@ class CycleOrmServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(ClassLocator::class, function() {
-            $finder = (new Finder())->files()->in([ config('cycle.entities_directory') ]);
+            $finder = (new Finder())->files()->in([ config('cycle.schema.path') ]);
 
             return new ClassLocator($finder);
         });
-
-        $this->app->alias(Cycle::class, 'cycle');
-
-        $this->app->singleton(MigrationConfig::class, function(Application $app) {
-            return new MigrationConfig(config('cycle.migrations'));
-        });
-
-        $this->app->singleton(Migrator::class, function(Application $app) {
-            $dbal = $this->app->make(DatabaseManager::class);
-            $config = $this->app->make(MigrationConfig::class);
-
-            return new Migrator($config, $dbal, new FileRepository($config));
-        });
-    }
-
-    public function boot()
-    {
-
     }
 }
