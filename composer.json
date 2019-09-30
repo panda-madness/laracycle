@@ -1,0 +1,13 @@
+{
+    "name": "panda-madness/cycle",
+    "description": "Basic Cycle ORM intergration for the Laravel Framework",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Margulan Baimbet",
+            "email": "thecigaroman@gmail.com"
+        }
+    ],
+    "require": {}
+}
