@@ -1,5 +1,6 @@
 {
     "name": "laracycle/laracycle",
+    "version": "0.1.0",
     "description": "Basic Cycle ORM intergration for the Laravel Framework",
     "type": "library",
     "license": "MIT",
